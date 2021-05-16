@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.vscode/
+.docker-data/
+.env
+src/dumper/data/**
+.idea/
+tmp/
+temp/
+ormconfig.json
+package-lock.json
