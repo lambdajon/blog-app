@@ -1,5 +1,6 @@
-import { sign } from "jsonwebtoken";
+import { sign, verify } from "jsonwebtoken";
 import Token from "../models/Token";
+import { IUser } from "../models/User";
 const createToken = async (payload: any, expiresIn: number) => {
   const key: string = process.env.JWT_SECRET || "123456789";
   return sign(payload, key, {
@@ -24,6 +25,11 @@ export async function jwtSignIn(user: any) {
 
     return { accessToken, refreshToken };
   } catch (e) {
-    throw new Error (`JWT jwtSignIn error: ${e}`);
+    throw new Error(`JWT jwtSignIn error: ${e}`);
   }
+}
+
+export async function checkToken(token: any): Promise<IUser> {
+  const key: string = process.env.JWT_SECRET || "123456789";
+  return verify(token.accessToken, key) as IUser;
 }
