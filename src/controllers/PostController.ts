@@ -1,18 +1,22 @@
 import { Request, Response, NextFunction } from "express";
 import { SendResponse } from "../lib/response";
 import { IRequest } from "../types/Request";
-import CategoryModel from "../models/Category";
+import PostModel from "../models/Post";
+import { PAGINATION } from "../core/config";
+
+// TODO: Formatting paginate responses
+// TODO: Implement file uploading Create upload images
+// TODO: Refactoring pagination
 export default class {
   async create(req: IRequest, res: Response) {
     try {
       const data = req.body;
-      console.log(data);
-      const existingData = await CategoryModel.findOne({ name: data.name });
-      if (existingData) {
-        return new SendResponse(res).error(400, "CATEGORY_EXIST");
-      }
-      const category = await CategoryModel.create(data);
-      new SendResponse(res).success(category);
+      const postData = new PostModel({
+        ...data,
+        author: req.session.user._id,
+      });
+      const post: any = await PostModel.create(postData);
+      new SendResponse(res).success(post);
     } catch (e) {
       new SendResponse(res).error(500, "SERVER_ERROR");
       throw new Error(`User controller register error: ${e}`);
@@ -20,8 +24,11 @@ export default class {
   }
   async list(req: IRequest, res: Response) {
     try {
-      const categories = await CategoryModel.find();
-      new SendResponse(res).success(categories);
+      const posts = await PostModel.find()
+        .populate("author", ["_id", "firstName", "lastName", "username"])
+        .limit(PAGINATION.limit)
+        .skip(PAGINATION.order);
+      new SendResponse(res).success(posts);
     } catch (e) {
       new SendResponse(res).error(500, "SERVER_ERROR");
       throw new Error(`User controller register error: ${e}`);
@@ -29,12 +36,11 @@ export default class {
   }
   async load(req: IRequest, res: Response) {
     try {
-      const id: string = req.params.id;
-      const category = await CategoryModel.findById(id);
-      if (!category) {
-        return new SendResponse(res).error(404, "CATEGORY_NOT_FOUND");
+      const post = await PostModel.findById(req.params.id);
+      if (!post) {
+        return new SendResponse(res).error(404, "POST_NOT_FOUND");
       }
-      new SendResponse(res).success(category);
+      new SendResponse(res).success(post);
     } catch (e) {
       new SendResponse(res).error(500, "SERVER_ERROR");
       throw new Error(`User controller register error: ${e}`);
@@ -44,13 +50,13 @@ export default class {
     try {
       const id: string = req.params.id;
       const data = req.body;
-      const category = await CategoryModel.findByIdAndUpdate(id, data, {
+      const post = await PostModel.findByIdAndUpdate(id, data, {
         new: true,
       });
-      if (!category) {
-        return new SendResponse(res).error(404, "CATEGORY_NOT_FOUND");
+      if (!post) {
+        return new SendResponse(res).error(404, "POST_NOT_FOUND");
       }
-      new SendResponse(res).success(category);
+      new SendResponse(res).success(post);
     } catch (e) {
       new SendResponse(res).error(500, "SERVER_ERROR");
       throw new Error(`User controller register error: ${e}`);
@@ -59,11 +65,11 @@ export default class {
   async remove(req: IRequest, res: Response) {
     try {
       const id: string = req.params.id;
-      const category = await CategoryModel.findByIdAndDelete(id);
-      if (!category) {
+      const post = await PostModel.findByIdAndDelete(id);
+      if (!post) {
         return new SendResponse(res).error(404, "CATEGORY_NOT_FOUND");
       }
-      new SendResponse(res).success(category);
+      new SendResponse(res).success(post);
     } catch (e) {
       new SendResponse(res).error(500, "SERVER_ERROR");
       throw new Error(`User controller register error: ${e}`);

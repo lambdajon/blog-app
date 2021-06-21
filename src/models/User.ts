@@ -22,6 +22,10 @@ const UserSchema: any = new Schema(
       unique: true,
     },
     password: String,
+    posts: [{
+      type: Schema.Types.ObjectId,
+      ref: 'Post',
+    }],
   },
   {
     versionKey: false,
